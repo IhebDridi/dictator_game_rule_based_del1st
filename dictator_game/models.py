@@ -2,10 +2,10 @@ from otree.api import *
 
 class Constants(BaseConstants):
     name_in_url = 'game_pages'
-    players_per_group = None  # No groups since it's asynchronous
-    num_rounds = 30  # Total rounds (3 parts × 10 rounds)
-    endowment = 100  # Amount for Dictator to allocate
-    rounds_per_part = 10  # Number of rounds per part
+    players_per_group = None
+    num_rounds = 30
+    endowment = 100
+    rounds_per_part = 10
 
     @staticmethod
     def get_part(round_number):
@@ -31,7 +31,6 @@ class Group(BaseGroup):
     pass
 
 class Player(BasePlayer):
-    # Allocation for the current decision (manual or agent-based)
     app_name = models.StringField(initial='rulebased_del1st')
 
     allocation = models.IntegerField(
@@ -45,14 +44,11 @@ class Player(BasePlayer):
     random_decisions = models.BooleanField(blank=True)
     random_payoff_part=models.IntegerField( blank=True, min=1, max=3 )
 
-    # Tracks the number of failed comprehension attempts
-    comprehension_attempts = models.IntegerField(initial=0) #new
-    incorrect_answers = models.StringField(blank=True) #new
-    agent_prog_allocation=models.StringField(initial='[]') #new
-    # Tracks whether the participant is excluded from the study
+    comprehension_attempts = models.IntegerField(initial=0)
+    incorrect_answers = models.StringField(blank=True)
+    agent_prog_allocation=models.StringField(initial='[]')
     is_excluded = models.BooleanField(initial=False)
 
-        # Allocation for the current decision (manual or agent-based)
     allocation = models.IntegerField(
         min=0,
         max=100,
@@ -105,12 +101,11 @@ class Player(BasePlayer):
     )
 
     feedback = models.LongStringField(
-        blank=True,                # optional
+        blank=True,
         max_length=1000,
         label="Suggestions / comments for the researchers (optional)",
     )
 
-    # Fields for comprehension test questions
     q1 = models.StringField(
         label="What is your role in this study?",
         choices=['a', 'b', 'c', 'd'],
@@ -162,7 +157,6 @@ class Player(BasePlayer):
         blank=True
     )
 
-    # Agent allocations for Part 2 (mandatory delegation)
     agent_allocation_mandatory_round_1 = models.IntegerField(min=0, max=100, blank=True)
     agent_allocation_mandatory_round_2 = models.IntegerField(min=0, max=100, blank=True)
     agent_allocation_mandatory_round_3 = models.IntegerField(min=0, max=100, blank=True)
@@ -174,7 +168,6 @@ class Player(BasePlayer):
     agent_allocation_mandatory_round_9 = models.IntegerField(min=0, max=100, blank=True)
     agent_allocation_mandatory_round_10 = models.IntegerField(min=0, max=100, blank=True)
 
-    #Track whether the participant chooses to delegate in Part 3
     delegate_decision_optional = models.BooleanField(
         label="Would you like to delegate your decisions to an AI agent for Part 3?",
         blank=False
@@ -183,7 +176,6 @@ class Player(BasePlayer):
 
 
 
-    # Agent allocations for Part 3 (optional delegation)
     agent_allocation_optional_round_1 = models.IntegerField(min=0, max=100, blank=True)
     agent_allocation_optional_round_2 = models.IntegerField(min=0, max=100, blank=True)
     agent_allocation_optional_round_3 = models.IntegerField(min=0, max=100, blank=True)

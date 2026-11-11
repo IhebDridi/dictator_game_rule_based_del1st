@@ -5,15 +5,12 @@ import pandas as pd
 import settings
 
 
-# -----------------------------
-#  General Introduction & Setup
-# -----------------------------
 
 class InformedConsent(Page):
     form_model = 'player'
     form_fields = ['prolific_id']
     def is_displayed(self):
-        return self.round_number == 1  # Show only once at the beginning
+        return self.round_number == 1
     def error_message_prolific_id(self, value):
         print('error check informed consesnte')
         pid = value.get('prolific_id', '')
@@ -23,7 +20,7 @@ class InformedConsent(Page):
 
 class Introduction(Page):
     def is_displayed(self):
-        return self.round_number == 1  # Show only once at the beginning
+        return self.round_number == 1
 
 
 class ComprehensionTest(Page):
@@ -71,9 +68,6 @@ class FailedTest(Page):
     def is_displayed(self):
         return self.player.is_excluded
 
-# -------------------------
-#  Per-Part Instructions
-# -------------------------
 
 class Instructions(Page):
     def is_displayed(self):
@@ -89,9 +83,6 @@ class Instructions(Page):
         }
 
 
-# -------------------------
-#  Agent Programming
-# -------------------------
 
 class AgentProgramming(Page):
     form_model = 'player'
@@ -101,7 +92,6 @@ class AgentProgramming(Page):
         return (
             (current_part == 1 or (current_part == 3 and self.player.delegate_decision_optional))
             and (self.round_number - 1) % Constants.rounds_per_part == 0
-            #and not self.player.is_excluded
         )
 
     def get_form_fields(self):
@@ -123,20 +113,6 @@ class AgentProgramming(Page):
 
     def before_next_page(self):
         current_part = Constants.get_part(self.round_number)
-        # if current_part in [2, 3]:
-        #     part_rounds = self.player.in_rounds(
-        #         (current_part - 1) * Constants.rounds_per_part + 1,
-        #         current_part * Constants.rounds_per_part
-        #     )
-        #     for round_num in range(1, 11):
-        #         allocation_field = (
-        #             f"agent_allocation_mandatory_round_{round_num}"
-        #             if current_part == 2
-        #             else f"agent_allocation_optional_round_{round_num}"
-        #         )
-        #         allocation_value = getattr(self.player, allocation_field)
-        #         for p in part_rounds:
-        #             setattr(p, allocation_field, allocation_value)
         allocations = json.loads(self.player.agent_prog_allocation)
 
         self.save_allocations_to_future_rounds(allocations)
@@ -145,17 +121,14 @@ class AgentProgramming(Page):
     
         print(data)
         try:
-            # ✅ Ensure we have exactly 10 allocations (Rounds 10 to 20)
             if len(data) != 10:
                 raise ValueError("⚠️ Error: Expected 10 allocation values.")
             round_number=self.round_number
             print('Ongoing Round: ',round_number)
-            for i in range(1,11):  # ✅ Loop for 10 rounds (rounds 10-20)
-                # ✅ Fetch player object for the future round
+            for i in range(1,11):
                 future_player = self.player.in_round(round_number)
                 self.round_number=round_number
 
-                # ✅ Store allocation in the correct round
                 future_player.allocation = data[str(i)]
                 print(f"✅ Saved allocation {future_player.allocation} for Round {round_number}")
                 round_number = round_number + 1
@@ -170,14 +143,10 @@ class AgentProgramming(Page):
 
 
 
-# -------------------------
-#  Decision Making
-# -------------------------
 
 class Decision(Page):
     form_model = 'player'
     form_fields = ['allocation']
-    #timeout_seconds = 20
 
 
     def is_displayed(self):
@@ -192,7 +161,6 @@ class Decision(Page):
             allocation = self.player.get_agent_decision_mandatory(display_round)
         elif current_part == 3 and self.player.delegate_decision_optional:
             allocation = self.player.get_agent_decision_optional(display_round)
-        #add logic to add allocation for part 1:
 
         return {
             'round_number': display_round,
@@ -208,61 +176,47 @@ class Decision(Page):
         import json
         import random
 
-        #decisions = json.loads(self.player.random_decisions)
-        #print(f"[DEBUG] Existing random_decisions: {decisions}")
 
-        # Get current part and display round
         current_part = Constants.get_part(self.round_number)
         display_round = (self.round_number - 1) % Constants.rounds_per_part + 1
 
-        if current_part == 2 or (current_part == 3 and not self.player.delegate_decision_optional)  :  # Part 1 logic or Part 3 with manual with manual decisions and timer
+        if current_part == 2 or (current_part == 3 and not self.player.delegate_decision_optional)  :
   
                 self.participant.vars['alert_message'] = None
                 self.player.random_decisions = False
                 self.player.delegate_decision_optional = False 
 
-            # Update decisions for the current round
 
 
 
-        elif current_part == 1:  # Mandatory delegation
+        elif current_part == 1:
             self.player.allocation = self.player.get_agent_decision_mandatory(display_round)
             self.participant.vars['alert_message'] = ""
             self.player.random_decisions = True
             self.player.delegate_decision_optional = False 
 
-        elif current_part == 3 and self.player.delegate_decision_optional:  # Optional delegation
+        elif current_part == 3 and self.player.delegate_decision_optional:
             self.player.allocation = self.player.get_agent_decision_optional(display_round)
             self.participant.vars['alert_message'] = ""
             self.player.random_decisions = False
             self.player.delegate_decision_optional = True
 
-        # elif current_part == 3 and not self.player.delegate_decision_optional:  # Manual decision
 
-        #     #self.player.allocation = self.player.get_agent_decision_optional(display_round)
-        #     self.player.random_decisions = False
-        #     self.player.delegate_decision_optional = False
-        #     self.player.allocation = self.player.get_agent_decision_optional(display_round)
 
 
 
         print(f"round:{self.round_number}  self.player.allocation: {self.player.allocation}")
 
 
-# -------------------------
-#  Delegation Decision
-# -------------------------
 
 class DelegationDecision(Page):
     form_model = 'player'
     form_fields = ['delegate_decision_optional']
 
     def is_displayed(self):
-        # Show only at the start of Part 1
         return Constants.get_part(self.round_number) == 3 and (self.round_number - 1) % Constants.rounds_per_part == 0
 
     def before_next_page(self):
-        # Save the decision for all rounds in Part 1
         if Constants.get_part(self.round_number) == 3:
             part_rounds = self.player.in_rounds(
                 (Constants.get_part(self.round_number) - 1) * Constants.rounds_per_part + 1,
@@ -273,9 +227,6 @@ class DelegationDecision(Page):
 
 
 
-# -------------------------
-#  Results
-# -------------------------
 
 class Results(Page):
     def is_displayed(self):
@@ -289,7 +240,6 @@ class Results(Page):
             is_delegation=False
         else: 
             is_delegation=  self.player.field_maybe_none('delegate_decision_optional')
-        #decisions = json.loads(self.player.random_decisions)
 
         player  = self.player
         rounds_data = []
@@ -299,7 +249,7 @@ class Results(Page):
                 current_part     * Constants.rounds_per_part + 1
         ):
             rr         = player.in_round(r)
-            allocation = rr.field_maybe_none('allocation') or 0   # 0 if None
+            allocation = rr.field_maybe_none('allocation') or 0
             rounds_data.append({
                 'round'     : r - (current_part - 1) * Constants.rounds_per_part,
                 'kept'      : 100 - allocation,
@@ -315,9 +265,6 @@ class Results(Page):
 
 
 
-# -------------------------
-#  Debriefing
-# -------------------------
 
 class Debriefing(Page):
     def is_displayed(self):
@@ -334,7 +281,6 @@ class Debriefing(Page):
         round_number=self.round_number
         random_payoff_part=random.randint(1,3)
 
-        # Loop through parts (1, 2, 3)
         for part in range(1, 4):
             part_data = []
             for round_number in range(
@@ -357,7 +303,6 @@ class Debriefing(Page):
         }
 
 
-        # Check if agent allocation was chosen in part 3
         agent_allocation_chosen = self.player.field_maybe_none('delegate_decision_optional')
         if self.player.field_maybe_none('random_payoff_part') == None: 
             random_payoff_part=self.random_payoff_selection()
@@ -406,12 +351,12 @@ class Debriefing(Page):
 class ExitQuestionnaire(Page):
     form_model = 'player'
     form_fields = [
-        'gender',           # Male / Female / Non-binary / Prefer not to say
-        'age',              # 18 – 100
-        'occupation',       # free text ≤ 100 chars
-        'ai_use',           # frequency scale
-        'task_difficulty',  # difficulty scale
-        'feedback',         # optional free text ≤ 1000 chars
+        'gender',
+        'age',
+        'occupation',
+        'ai_use',
+        'task_difficulty',
+        'feedback',
     ]
 
     def is_displayed(self):
@@ -420,7 +365,6 @@ class ExitQuestionnaire(Page):
 
 class Thankyou(Page):
 
-    # the Prolific completion link
 
     def vars_for_template(self):
         prolific_url = 'https://bsky.app/profile/iterrucha.bsky.social'
@@ -439,7 +383,7 @@ class SaveData(Page):
 
             rows = []
 
-            for pl in self.player.in_all_rounds():          # built-in oTree helper
+            for pl in self.player.in_all_rounds():
                 rows.append({
                     "participant_code": pl.participant.code,
                     "session_code":     pl.session.code,
@@ -449,58 +393,49 @@ class SaveData(Page):
                     "round_number": pl.field_maybe_none('round_number'),
                     "allocation": int(pl.field_maybe_none('allocation') or 0),
                     "kept": 100 - (pl.field_maybe_none('allocation') or 0),
-                    #"random_decisions": pl.field_maybe_none('random_decisions'),
                     "random_payoff_part": pl.field_maybe_none('random_payoff_part'),
-                    #"payoff_cents": (int(pl.field_maybe_none('kept') or 0) + 5) // 10,
                     "is_delegation": True if  pl.field_maybe_none('round_number') in range (1,11) else True if pl.field_maybe_none('delegate_decision_optional') else False,
                     "delegate_decision_optional": pl.field_maybe_none('delegate_decision_optional'),
-                    #"dataset_generated": pl.field_maybe_none('supervised_dataset'),
                     "comprehension_attempts": pl.field_maybe_none('comprehension_attempts'),
                     "incorrect_answers": pl.field_maybe_none('incorrect_answers'),
                     "is_excluded": pl.field_maybe_none('is_excluded'),
-                    'gender': pl.field_maybe_none('gender'),           # Male / Female / Non-binary / Prefer not to say
-                    'age': pl.field_maybe_none('age'),              # 18 – 100
-                    'occupation': pl.field_maybe_none('occupation'),       # free text ≤ 100 chars
-                    'ai_use': pl.field_maybe_none('ai_use'),           # frequency scale
-                    'task_difficulty': pl.field_maybe_none('task_difficulty'),  # difficulty scale
-                    'feedback': pl.field_maybe_none('feedback'),         # optional free text ≤ 1000 chars
+                    'gender': pl.field_maybe_none('gender'),
+                    'age': pl.field_maybe_none('age'),
+                    'occupation': pl.field_maybe_none('occupation'),
+                    'ai_use': pl.field_maybe_none('ai_use'),
+                    'task_difficulty': pl.field_maybe_none('task_difficulty'),
+                    'feedback': pl.field_maybe_none('feedback'),
                 })
 
             df = pd.DataFrame(rows)
             static_columns = [ "prolific_id","gender", "age", "occupation", "ai_use", "task_difficulty", "feedback",'random_payoff_part','experiment','comprehension_attempts','incorrect_answers','is_excluded']
             df[static_columns] = df[static_columns].ffill().bfill()
-            prolific_id = df['prolific_id'].iloc[0]  # Get the first Prolific ID
+            prolific_id = df['prolific_id'].iloc[0]
             print(f"Saving data for Prolific ID: {prolific_id}")
 
 
-            # create file if missing, otherwise append (without rewriting header)
             path=settings.data_path
             df.to_csv(path+f'{prolific_id}.csv',  index=False)
 
             
     def before_next_page(self):
-        # Save player data before moving to the next page
         print("S Round number:  ,",self.round_number)
 
         if self.round_number == Constants.num_rounds:
-            #print("Round number: ,",self.round_number)
             self.save_player_data()
-# -------------------------
-#  Page Sequence
-# -------------------------
 
 page_sequence = [
-    InformedConsent,        # Only at the beginning
-    Introduction,           # Only at the beginning
-    ComprehensionTest,      # Only at the beginning
-    FailedTest,             # If excluded after failing comprehension test
-    Instructions,           # Once at the start of each part
-    DelegationDecision,     # At the start of Part 3 to choose delegation
-    AgentProgramming,       # Programming page for Part 2 or Part 3 (if delegation is chosen)
-    Decision,               # Reusable for all parts (manual and agent-driven)
-    Results,                # Reusable for all parts
-    Debriefing,             # At the end or if excluded
+    InformedConsent,
+    Introduction,
+    ComprehensionTest,
+    FailedTest,
+    Instructions,
+    DelegationDecision,
+    AgentProgramming,
+    Decision,
+    Results,
+    Debriefing,
     ExitQuestionnaire,
-    SaveData,               # Save data at the end or if excluded
+    SaveData,
     Thankyou,
 ]

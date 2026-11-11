@@ -58,21 +58,18 @@
     function sendAllocations() {
         
         let allocationData = {}
-        // Select all input elements in the form
         document.querySelectorAll('.input-number').forEach(input => {
             allocationData[input.name]=parseInt(input.value, 10);
         });
         console.log('Values from table:', allocationData);
         
 
-        // Send the data via liveSend
         liveSend({ 'allocations': JSON.stringify(allocationData) });
     }
 </script>
 
 
 <style>
-/* General Styling */
 body {
     font-family: 'Arial', sans-serif;
     background-color: #f9f9f9;
@@ -81,7 +78,6 @@ body {
     padding: 0;
 }
 
-/* Container Styling */
 .allocation-container {
     max-width: 800px;
     margin: 50px auto;
@@ -91,18 +87,16 @@ body {
     border-radius: 8px;
 }
 
-/* Title Styling */
 .main-title {
     font-size: 28px;
     text-align: center;
     margin-bottom: 20px;
     color: #333333;
     font-weight: bold;
-    border-bottom: 3px solid #0056b3; /* Bottom border color */
+    border-bottom: 3px solid #0056b3; 
     padding-bottom: 10px;
 }
 
-/* Text Styling */
 .intro-text, .instructions, .confirmation-text {
     font-size: 16px;
     margin-bottom: 20px;
@@ -110,7 +104,6 @@ body {
     color: #555555;
 }
 
-/* Table Styling */
 .styled-table {
     border-collapse: show;
     margin: 25px auto;
@@ -142,7 +135,6 @@ body {
     background-color: #f1f1f1;
 }
 
-/* Input Styling */
 .input-number {
     width: 80%;
     padding: 10px;
@@ -152,7 +144,6 @@ body {
     text-align: center;
 }
 
-/* Button Styling */
 .modern-btn {
     display: block;
     width: 100%;
@@ -161,7 +152,7 @@ body {
     padding: 12px 20px;
     font-size: 18px;
     color: #ffffff;
-    background-color: #0056b3; /* Button background color */
+    background-color: #0056b3; 
     border: none;
     border-radius: 6px;
     cursor: pointer;
@@ -170,10 +161,9 @@ body {
 }
 
 .modern-btn:hover {
-    background-color: #003d80; /* Darker on hover */
+    background-color: #003d80; 
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
     .allocation-container {
         padding: 20px;
